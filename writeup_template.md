@@ -31,44 +31,34 @@ In planning utils, the basic utitlies including building grid, action class, act
 
 In motion_planning, it is an event driven flying system which was inherit from the backyard flyer project. On top of the stages in backyard flyer, it also adds the planning stage.
 
-And here's a lovely image of my results (ok this image has nothing to do with it, but it's a nice example of how to include images in your writeup!)
-![Top Down View](./misc/high_up.png)
-
-Here's | A | Snappy | Table
---- | --- | --- | ---
-1 | `highlight` | **bold** | 7.41
-2 | a | b | c
-3 | *italic* | text | 403
-4 | 2 | 3 | abcd
 
 ### Implementing Your Path Planning Algorithm
 
 #### 1. Set your global home position
-Here students should read the first line of the csv file, extract lat0 and lon0 as floating point values and use the self.set_home_position() method to set global home. Explain briefly how you accomplished this in your code.
+This is actually harder than it should be IMHO. I used a regex to find the floating point numbers. The original format is "lat0 37.792480, lon0 -122.397450" which is not csv format. If we had "lat0, lon0" on 1st row and "37.792480, -122.397450" on the 2nd, it conforms the csv format and would be much easier to read. I ended up finding the regex expression online to achieve this. But surpringly, finding a robust floating point regex expression requires some search and trial and error.
 
 
-And here is a lovely picture of our downtown San Francisco environment from above!
-![Map of SF](./misc/map.png)
+This part is not very intuitive at first place because global home is set through the set_home_position and I guess in the drone class, we later transform all the coordinate realtively to home position. This makes sense while more document might be easier to understand. If I missed anything, please let me know.
+
 
 #### 2. Set your current local position
-Here as long as you successfully determine your local position relative to global home you'll be all set. Explain briefly how you accomplished this in your code.
+To be honest, I am not fullying understanding how it works under the hood. I guessed what happened was that once we set the global lat/lon coordinate, all the gps reading afterwards will be translated to the local coordinate system.
 
-
-Meanwhile, here's a picture of me flying through the trees!
-![Forest Flying](./misc/in_the_trees.png)
 
 #### 3. Set grid start position from local position
-This is another step in adding flexibility to the start location. As long as it works you're good to go!
+Another not so clear piece to me.
+
 
 #### 4. Set grid goal position from geodetic coords
-This step is to add flexibility to the desired goal location. Should be able to choose any (lat, lon) within the map and have it rendered to a goal location on the grid.
+Another not so clear piece to me.
+
 
 #### 5. Modify A* to include diagonal motion (or replace A* altogether)
-Minimal requirement here is to modify the code in planning_utils() to update the A* implementation to include diagonal motions on the grid that have a cost of sqrt(2), but more creative solutions are welcome. Explain the code you used to accomplish this step.
+I added this and the tricky part is to do cost correctly. I tried to add the diagonal cost by firstly adding an integer move. The problem with that is that it actually has larger cost even tough it might be more efficient. The key is to normalize the cost. I ended up make the move continuous, other than discrete. Another potential way is to have a deeper search strategy (e.g. look more steps ahead, like 2 or more). This solution however will be more complicated to implement. So I used the fractional A star algroithm. There are some tradeoff I need to make, e.g. the duplicate step search. I ended up with the upsampling method. There might be better methods out there.
+
 
 #### 6. Cull waypoints 
-For this step you can use a collinearity test or ray tracing method like Bresenham. The idea is simply to prune your path of unnecessary waypoints. Explain the code you used to accomplish this step.
-
+Due to time limit, I ended up with the colinearity check. The Bresenham might be a better solution. Will try to revisit later when I got time. (sorry, the famous excuse :-) )
 
 
 ### Execute the flight
