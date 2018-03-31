@@ -51,15 +51,15 @@ class Action(Enum):
     is the cost of performing the action.
     """
 
-    WEST =  ( 0,-1, 1)
-    EAST =  ( 0, 1, 1)
-    NORTH = (-1, 0, 1)
-    SOUTH = ( 1, 0, 1)
+    WEST =  ( 0.,-1., 1)
+    EAST =  ( 0., 1., 1)
+    NORTH = (-1., 0., 1)
+    SOUTH = ( 1., 0., 1)
 
-    NORTHWEST = (-1, -1, 1.414)
-    NORTHEAST = (-1,  1, 1.414)
-    SOUTHWEST = ( 1, -1, 1.414)
-    SOUTHEAST = ( 1,  1, 1.414)
+    NORTHWEST = (-0.707, -0.707, 1)
+    NORTHEAST = (-0.707,  0.707, 1)
+    SOUTHWEST = ( 0.707, -0.707, 1)
+    SOUTHEAST = ( 0.707,  0.707, 1)
 
     @property
     def cost(self):
@@ -83,19 +83,19 @@ def valid_actions(grid, current_node):
 
     #print('grid shape {}, current node {}'.format(grid.shape, current_node))
     try:
-        if x - 1 < 0 or grid[x - 1, y] == 1:
+        if x - 1 < 0 or grid[int(round(x - 1)), int(round(y))] == 1:
             valid_actions.remove(Action.NORTH)
             valid_actions.remove(Action.NORTHWEST)
             valid_actions.remove(Action.NORTHEAST)
-        if x + 1 > n or grid[x + 1, y] == 1:
+        if x + 1 > n or grid[int(round(x + 1)), int(round(y))] == 1:
             valid_actions.remove(Action.SOUTH)
             valid_actions.remove(Action.SOUTHWEST)
             valid_actions.remove(Action.SOUTHEAST)
-        if y - 1 < 0 or grid[x, y - 1] == 1:
+        if y - 1 < 0 or grid[int(round(x)), int(round(y - 1))] == 1:
             valid_actions.remove(Action.WEST)
             valid_actions.remove(Action.NORTHWEST)
             valid_actions.remove(Action.SOUTHWEST)
-        if y + 1 > m or grid[x, y + 1] == 1:
+        if y + 1 > m or grid[int(round(x)), int(round(y + 1))] == 1:
             valid_actions.remove(Action.EAST)
             valid_actions.remove(Action.NORTHEAST)
             valid_actions.remove(Action.SOUTHEAST)
@@ -115,7 +115,7 @@ def a_star(grid, h, start, goal):
 
     branch = {}
     found = False
-
+    final_goal = start
     while not queue.empty():
         item = queue.get()
         current_node = item[1]
@@ -124,9 +124,11 @@ def a_star(grid, h, start, goal):
         else:
             current_cost = branch[current_node][0]
 
-        if current_node == goal:
-            print('Found a path.')
+        dist = np.linalg.norm(np.array(current_node) - np.array(goal))
+        if dist < 1.:
+            print('Found a path of length {}.'.format(queue.qsize()))
             found = True
+            final_goal = current_node
             break
         else:
             for action in valid_actions(grid, current_node):
@@ -136,16 +138,18 @@ def a_star(grid, h, start, goal):
                 branch_cost = current_cost + action.cost
                 queue_cost = branch_cost + h(next_node, goal)
 
-                if next_node not in visited:                
-                    visited.add(next_node)               
+                # upsample the next node
+                upsample_next_node = (int(round(next_node[0] * 2)), int(round(next_node[1] * 2)))
+                if upsample_next_node not in visited:                
+                    visited.add(upsample_next_node)
                     branch[next_node] = (branch_cost, current_node, action)
                     queue.put((queue_cost, next_node))
              
     if found:
         # retrace steps
-        n = goal
+        n = final_goal
         path_cost = branch[n][0]
-        path.append(goal)
+        path.append(final_goal)
         while branch[n][1] != start:
             path.append(branch[n][1])
             n = branch[n][1]
@@ -184,7 +188,7 @@ def prune_path(path):
         # epsilon 1e-6 => .1 doesnt matter
         # 1 => 81
         # 10 => 23
-        if collinearity_check(point(p1), point(p2), point(p3), .5):
+        if collinearity_check(point(p1), point(p2), point(p3), 8):
             # save p3 and remove p2
             p2 = p3
         else:
