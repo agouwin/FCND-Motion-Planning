@@ -51,10 +51,15 @@ class Action(Enum):
     is the cost of performing the action.
     """
 
-    WEST = (0, -1, 1)
-    EAST = (0, 1, 1)
+    WEST =  ( 0,-1, 1)
+    EAST =  ( 0, 1, 1)
     NORTH = (-1, 0, 1)
-    SOUTH = (1, 0, 1)
+    SOUTH = ( 1, 0, 1)
+
+    NORTHWEST = (-1, -1, 1.414)
+    NORTHEAST = (-1,  1, 1.414)
+    SOUTHWEST = ( 1, -1, 1.414)
+    SOUTHEAST = ( 1,  1, 1.414)
 
     @property
     def cost(self):
@@ -76,14 +81,26 @@ def valid_actions(grid, current_node):
     # check if the node is off the grid or
     # it's an obstacle
 
-    if x - 1 < 0 or grid[x - 1, y] == 1:
-        valid_actions.remove(Action.NORTH)
-    if x + 1 > n or grid[x + 1, y] == 1:
-        valid_actions.remove(Action.SOUTH)
-    if y - 1 < 0 or grid[x, y - 1] == 1:
-        valid_actions.remove(Action.WEST)
-    if y + 1 > m or grid[x, y + 1] == 1:
-        valid_actions.remove(Action.EAST)
+    #print('grid shape {}, current node {}'.format(grid.shape, current_node))
+    try:
+        if x - 1 < 0 or grid[x - 1, y] == 1:
+            valid_actions.remove(Action.NORTH)
+            valid_actions.remove(Action.NORTHWEST)
+            valid_actions.remove(Action.NORTHEAST)
+        if x + 1 > n or grid[x + 1, y] == 1:
+            valid_actions.remove(Action.SOUTH)
+            valid_actions.remove(Action.SOUTHWEST)
+            valid_actions.remove(Action.SOUTHEAST)
+        if y - 1 < 0 or grid[x, y - 1] == 1:
+            valid_actions.remove(Action.WEST)
+            valid_actions.remove(Action.NORTHWEST)
+            valid_actions.remove(Action.SOUTHWEST)
+        if y + 1 > m or grid[x, y + 1] == 1:
+            valid_actions.remove(Action.EAST)
+            valid_actions.remove(Action.NORTHEAST)
+            valid_actions.remove(Action.SOUTHEAST)
+    except ValueError:
+        pass
 
     return valid_actions
 
@@ -98,16 +115,16 @@ def a_star(grid, h, start, goal):
 
     branch = {}
     found = False
-    
+
     while not queue.empty():
         item = queue.get()
         current_node = item[1]
         if current_node == start:
             current_cost = 0.0
-        else:              
+        else:
             current_cost = branch[current_node][0]
-            
-        if current_node == goal:        
+
+        if current_node == goal:
             print('Found a path.')
             found = True
             break
@@ -118,7 +135,7 @@ def a_star(grid, h, start, goal):
                 next_node = (current_node[0] + da[0], current_node[1] + da[1])
                 branch_cost = current_cost + action.cost
                 queue_cost = branch_cost + h(next_node, goal)
-                
+
                 if next_node not in visited:                
                     visited.add(next_node)               
                     branch[next_node] = (branch_cost, current_node, action)
@@ -143,4 +160,39 @@ def a_star(grid, h, start, goal):
 
 def heuristic(position, goal_position):
     return np.linalg.norm(np.array(position) - np.array(goal_position))
+
+
+def point(p):
+    return np.array([p[0], p[1], 1.]).reshape(1, -1)
+
+def collinearity_check(p1, p2, p3, epsilon=1e-6):
+    m = np.concatenate((p1, p2, p3), 0)
+    det = np.linalg.det(m)
+    return abs(det) < epsilon
+
+def prune_path(path):
+    #pruned_path = [p for p in path]
+    if len(path) < 3:
+        return path
+
+    p1 = path[0]
+    p2 = path[1]
+    # always have the 1st point
+    pruned_path= [p1]
+    for i in range(2, len(path)):
+        p3 = path[i]
+        # epsilon 1e-6 => .1 doesnt matter
+        # 1 => 81
+        # 10 => 23
+        if collinearity_check(point(p1), point(p2), point(p3), .5):
+            # save p3 and remove p2
+            p2 = p3
+        else:
+            # save the turning point
+            pruned_path.append(p2)
+            p1 = p2
+            p2 = p3
+    # save the last point
+    pruned_path.append(p3)
+    return pruned_path
 

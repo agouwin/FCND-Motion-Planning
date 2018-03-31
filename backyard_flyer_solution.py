@@ -45,6 +45,7 @@ class BackyardFlyer(Drone):
                 self.all_waypoints = self.calculate_box()
                 self.waypoint_transition()
         elif self.flight_state == States.WAYPOINT:
+            print('local_position: {}, target position: {}'.format(self.local_position, self.target_position))
             if np.linalg.norm(self.target_position[0:2] - self.local_position[0:2]) < 1.0:
                 if len(self.all_waypoints) > 0:
                     self.waypoint_transition()
@@ -78,6 +79,7 @@ class BackyardFlyer(Drone):
         print("arming transition")
         self.take_control()
         self.arm()
+        print('Set home position to {}'.format(self.global_position))
         self.set_home_position(self.global_position[0], self.global_position[1],
                                self.global_position[2])  # set the current location to be the home position
 
