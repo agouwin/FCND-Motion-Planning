@@ -1,5 +1,8 @@
 ## Project: 3D Motion Planning
 ![Quad Image](./misc/enroute.png)
+![Img1](./img1.png)
+![Img2](./img2.png)
+![Img3](./img3.png)
 
 ---
 
