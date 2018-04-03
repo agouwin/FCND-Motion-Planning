@@ -54,11 +54,22 @@ Another not so clear piece to me.
 
 
 #### 5. Modify A* to include diagonal motion (or replace A* altogether)
-I added this and the tricky part is to do cost correctly. I tried to add the diagonal cost by firstly adding an integer move. The problem with that is that it actually has larger cost even tough it might be more efficient. The key is to normalize the cost. I ended up make the move continuous, other than discrete. Another potential way is to have a deeper search strategy (e.g. look more steps ahead, like 2 or more). This solution however will be more complicated to implement. So I used the fractional A star algroithm. There are some tradeoff I need to make, e.g. the duplicate step search. I ended up with the upsampling method. There might be better methods out there.
+I added this and the tricky part is to calculate cost correctly. The default solution only considers 4-neighbors and the result of it is the "blocky" trajectory.
+
+I addressed this by adding the diagonal move (8 neighbors) and their corersponding costs. I firstly just added the integer move (the offset of +/-1). The problem with that is that our current A star algorithm has a search depth of 1. So if we need (1, 1) move, the original 4-neighbor move will be (1, 0) move followed by a (0, 1) move. And the cost will be 2. For the diagonal move, we just need to take (1, 1) with a cost of 1.414. But because of the search dept is only 1, as far as 1 step is concerned, (1, 0) move will have a lower cost than the (1, 1) move. And this is not optimal.
+
+There are different ways to address it. The solution I provided is a simple one and the key is to normalize the cost. So, instead of a (1, 1) move, I do a (0.717, 0.717) move and the cost is 1. The issue with this right out of the box is that we are hashing the discrete position and when we have fractionaly movement, the hashing simply breaks. My solution to that is to upsample the grids by a factor of two. So each step we made, I will check whether the rounding position to the cloest grid of (0.5, 0.5) resultion is occupied or not. This take some extra calculation, but it works reasonably well. The downside is that it will produce more smaller steps which is not an issue if we do pruning afterwards.
+
+Another potential way is to have a deeper search strategy (e.g. look more steps ahead, like 2 or more). This solution however will be more complicated to implement. 
 
 
 #### 6. Cull waypoints 
-Due to time limit, I ended up with the colinearity check. The Bresenham might be a better solution. Will try to revisit later when I got time. (sorry, the famous excuse :-) )
+In current implementation, we are using simple colinearity check. At each step, three points p1, p2, p3 were checked. p1 is the starting point, p2 is the mid point to check and p3 and the ending point. There are two scenarios:
+
+1. Colinear: In this case, the three points are on the same line and we remove p2 by replacing it with p3;
+2. Non-colinear: In this case, we have 3 points not on the same line. We will keep p2 and mark p3 as the new mid point.
+
+Due to time limit, This is the simplest thing we can do. The Bresenham might be a better solution. Will try to revisit later when I got time. (sorry, the famous excuse :-) )
 
 
 ### Execute the flight
