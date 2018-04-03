@@ -30,9 +30,20 @@ You're reading it! Below I describe how I addressed each rubric point and where 
 ### Explain the Starter Code
 
 #### 1. Explain the functionality of what's provided in `motion_planning.py` and `planning_utils.py`
-In planning utils, the basic utitlies including building grid, action class, action validation, A star search and etcs.
+In planning utils, the basic utitlies including:
+1. building grid: The discretize the map into blocks of 1m-1m block;
+2. action class: All the allowed actions for the A* algorithm
+3. action validation: To check whether each move is valid;
+4. A star search: The essential path finding algorithm
+5. Trajectory pruning algorithm: Pruning the trajectory and save way points
 
-In motion_planning, it is an event driven flying system which was inherit from the backyard flyer project. On top of the stages in backyard flyer, it also adds the planning stage.
+In motion_planning, it is an event driven drone control system which was inherit from the backyard flyer project. On top of the stages in backyard flyer, it also adds the planning stage. Inside planning stage, the algorithm will:
+1. discrete the map into grids;
+2. set the global home position;
+3. set the global/local goal position;
+4. plan out the route to the goal;
+5. optimize the way points by pruning;
+6. send the way points to the state machine;
 
 
 ### Implementing Your Path Planning Algorithm
@@ -77,7 +88,7 @@ Due to time limit, This is the simplest thing we can do. The Bresenham might be 
 
 ### Execute the flight
 #### 1. Does it work?
-It works!
+It works! Please check the newly added images.
 
 ### Double check that you've met specifications for each of the [rubric](https://review.udacity.com/#!/rubrics/1534/view) points.
   
